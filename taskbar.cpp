@@ -58,6 +58,7 @@ extern "C" WINBASEAPI HWND WINAPI GetConsoleWindow();
 #define WM_TASKBARNOTIFY_MENUITEM_ABOUT (WM_USER + 24)
 #define WM_TASKBARNOTIFY_MENUITEM_EXIT (WM_USER + 25)
 #define WM_TASKBARNOTIFY_MENUITEM_PROXYLIST_BASE (WM_USER + 26)
+#define WM_TASKBARNOTIFY_MENUITEM_CALLGOGO (WM_USER + 27)
 
 HINSTANCE hInst;
 HWND hWnd;
@@ -65,6 +66,7 @@ HWND hConsole;
 WCHAR szTitle[64] = L"";
 WCHAR szWindowClass[16] = L"taskbar";
 WCHAR szCommandLine[1024] = L"";
+WCHAR szGogoTesterCommandLine[1024] = L"";
 WCHAR szTooltip[512] = L"";
 WCHAR szBalloon[512] = L"";
 WCHAR szEnvironment[1024] = L"";
@@ -120,7 +122,7 @@ BOOL ShowTrayIcon(LPCTSTR lpszProxy, DWORD dwMessage=NIM_ADD)
 	nid.dwInfoFlags=NIIF_INFO;
 	nid.uCallbackMessage = WM_TASKBARNOTIFY;
 	nid.hIcon = LoadIcon(hInst, (LPCTSTR)IDI_SMALL);
-	nid.uTimeoutAndVersion = 3 * 1000 | NOTIFYICON_VERSION;
+	nid.uTimeout = 3 * 1000 | NOTIFYICON_VERSION;
 	lstrcpy(nid.szInfoTitle, szTitle);
 	if (lpszProxy)
 	{
@@ -266,6 +268,8 @@ BOOL ShowPopupMenu()
 		AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hSubMenu, L"\x8bbe\x7f6e IE \x4ee3\x7406");
 	}
 	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_RELOAD, L"\x91cd\x65b0\x8f7d\x5165");
+	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_CALLGOGO, L"\x8C03\x7528GoGo Tester\x83b7\x53D6IP");
+	
 	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_EXIT,   L"\x9000\x51fa");
 	GetCursorPos(&pt);
 	TrackPopupMenu(hMenu, TPM_LEFTALIGN, pt.x, pt.y, 0, hWnd, NULL);
@@ -282,13 +286,14 @@ BOOL ParseProxyList()
 	ExpandEnvironmentStrings(tmpProxyString, szProxyString, sizeof(szProxyString)/sizeof(szProxyString[0]));
 	free(tmpProxyString);
 	WCHAR *sep = L"\n";
-	WCHAR *pos = wcstok(szProxyString, sep);
+	TCHAR *next_token = NULL;
+	WCHAR *pos = wcstok_s(szProxyString, sep,&next_token);
 	INT i = 0;
 	lpProxyList[i++] = L"";
 	while (pos && i < sizeof(lpProxyList)/sizeof(lpProxyList[0]))
 	{
 		lpProxyList[i++] = pos;
-		pos = wcstok(NULL, sep);
+		pos = wcstok_s(NULL, sep,&next_token);
 	}
 	lpProxyList[i] = 0;
 	return TRUE;
@@ -325,10 +330,12 @@ BOOL SetEenvironment()
 	LoadString(hInst, IDS_CMDLINE, szCommandLine, sizeof(szCommandLine)/sizeof(szCommandLine[0])-1);
 	LoadString(hInst, IDS_ENVIRONMENT, szEnvironment, sizeof(szEnvironment)/sizeof(szEnvironment[0])-1);
 	LoadString(hInst, IDS_PROXYLIST, szProxyString, sizeof(szProxyString)/sizeof(szEnvironment[0])-1);
+	LoadString(hInst, IDS_GOGOTESTER, szGogoTesterCommandLine, sizeof(szGogoTesterCommandLine)/sizeof(szGogoTesterCommandLine[0])-1);
 
 	WCHAR *sep = L"\n";
 	WCHAR *pos = NULL;
-    WCHAR *token = wcstok(szEnvironment, sep);
+	TCHAR *next_token = NULL;
+    WCHAR *token = wcstok_s(szEnvironment, sep, &next_token);
 	while(token != NULL)
 	{
 		if (pos = wcschr(token, L'='))
@@ -337,7 +344,7 @@ BOOL SetEenvironment()
 			SetEnvironmentVariableW(token, pos+1);
 			//wprintf(L"[%s] = [%s]\n", token, pos+1);
 		}
-		token = wcstok(NULL, sep);
+		token = wcstok_s(NULL, sep, &next_token);
 	}
 
 	GetEnvironmentVariableW(L"TASKBAR_TITLE", szTitle, sizeof(szTitle)/sizeof(szTitle[0])-1);
@@ -392,6 +399,22 @@ BOOL ExecCmdline()
 	return TRUE;
 }
 
+BOOL CallGogoTesterCmdline()
+{
+	STARTUPINFO si = { sizeof(si) };
+	PROCESS_INFORMATION pi;
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = TRUE;
+	BOOL bRet = CreateProcess(NULL, szGogoTesterCommandLine, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi);
+	if(FALSE == bRet)
+	{
+		wprintf(L"CallGogoTesterCmdline \"%s\" failed!\n", szGogoTesterCommandLine);
+		MessageBox(NULL, szGogoTesterCommandLine, L"Error: \x6267\x884c\x547d\x4ee4\x5931\x8d25!", MB_OK);
+	}
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+	return TRUE;
+}
 BOOL ReloadCmdline()
 {
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwChildrenPid);
@@ -439,6 +462,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (nID == WM_TASKBARNOTIFY_MENUITEM_RELOAD)
 			{
 				ReloadCmdline();
+			}
+			if (nID == WM_TASKBARNOTIFY_MENUITEM_CALLGOGO)
+			{
+				CallGogoTesterCmdline();
 			}
 			else if (nID == WM_TASKBARNOTIFY_MENUITEM_ABOUT)
 			{

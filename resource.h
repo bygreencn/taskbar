@@ -1,10 +1,11 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by taskbar.rc
 //
 #define IDS_CMDLINE                     1
 #define IDS_ENVIRONMENT                 2
 #define IDS_PROXYLIST                   3
+#define IDS_GOGOTESTER                  4
 #define IDI_ICON1                       101
 #define IDI_ICON2                       104
 #define IDI_TASKBAR                     105
