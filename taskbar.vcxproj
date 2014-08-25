@@ -58,7 +58,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>kernel32.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

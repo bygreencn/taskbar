@@ -421,6 +421,7 @@ BOOL ReloadCmdline()
 	if (hProcess)
 	{
 		TerminateProcess(hProcess, 0);
+		CloseHandle(hProcess);
 	}
 	ShowWindow(hConsole, SW_SHOW);
 	SetForegroundWindow(hConsole);
