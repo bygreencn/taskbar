@@ -263,13 +263,12 @@ BOOL ShowPopupMenu()
 	HMENU hMenu = CreatePopupMenu();
 	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_SHOW, L"\x663e\x793a");
 	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_HIDE, L"\x9690\x85cf");
+	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_CALLGOGO, L"\x8C03\x7528GoGo Tester\x83b7\x53D6IP");
 	if (hSubMenu != NULL)
 	{
 		AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hSubMenu, L"\x8bbe\x7f6e IE \x4ee3\x7406");
 	}
 	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_RELOAD, L"\x91cd\x65b0\x8f7d\x5165");
-	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_CALLGOGO, L"\x8C03\x7528GoGo Tester\x83b7\x53D6IP");
-	
 	AppendMenu(hMenu, MF_STRING, WM_TASKBARNOTIFY_MENUITEM_EXIT,   L"\x9000\x51fa");
 	GetCursorPos(&pt);
 	TrackPopupMenu(hMenu, TPM_LEFTALIGN, pt.x, pt.y, 0, hWnd, NULL);
