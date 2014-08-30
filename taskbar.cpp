@@ -1,4 +1,5 @@
-#define _WIN32_IE 0x0500
+#define _WIN32_WINNT 0x0501
+#define _WIN32_IE 0x0501
 
 #include <windows.h>
 #include <wininet.h>
@@ -416,10 +417,12 @@ BOOL CallGogoTesterCmdline()
 }
 BOOL ReloadCmdline()
 {
-	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwChildrenPid);
+	HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwChildrenPid);
 	if (hProcess)
 	{
-		TerminateProcess(hProcess, 0);
+		DWORD dwExitcode = 0;
+		GetExitCodeProcess(hProcess,&dwExitcode);
+		TerminateProcess(hProcess, dwExitcode);
 		CloseHandle(hProcess);
 	}
 	ShowWindow(hConsole, SW_SHOW);
